@@ -1,0 +1,1367 @@
+```yaml
+version: "1.0"
+
+project:
+  name: the-stocks
+  description: >
+    Canonical registry of external data sources used by the-stocks.
+    Sources are classified by domain, access pattern, licensing,
+    expected freshness, and their intended role in the platform.
+
+defaults:
+  timezone: UTC
+  ingestion:
+    retries: 3
+    timeout_seconds: 30
+  storage:
+    raw_layer: bronze
+    normalized_layer: silver
+    curated_layer: gold
+
+sources:
+
+  # ==========================================================================
+  # MARKET DATA
+  # ==========================================================================
+
+  alpha_vantage:
+    name: Alpha Vantage
+    category: market_data
+    provider_type: commercial_api
+    enabled: true
+
+    capabilities:
+      - historical_prices
+      - intraday_prices
+      - quotes
+      - equities
+      - etfs
+      - forex
+      - crypto
+      - commodities
+      - technical_indicators
+      - fundamentals
+      - news
+      - sentiment
+
+    markets:
+      - global
+
+    access:
+      type: rest_api
+      authentication: api_key
+      streaming: false
+      batch: true
+
+    formats:
+      - json
+      - csv
+
+    freshness:
+      historical: true
+      intraday: true
+      realtime: limited
+
+    cost:
+      model: freemium
+
+    use_cases:
+      - bootstrap_market_data
+      - historical_prices
+      - reference_market_data
+      - prototyping
+
+    priority: medium
+
+    notes: >
+      Broad API with equities, ETFs, fundamentals, macroeconomic data,
+      commodities, forex, crypto and news. Useful as a bootstrap source,
+      although rate limits make it less attractive as the main production
+      market feed.
+
+  twelve_data:
+    name: Twelve Data
+    category: market_data
+    provider_type: commercial_api
+    enabled: true
+
+    capabilities:
+      - historical_prices
+      - intraday_prices
+      - quotes
+      - equities
+      - etfs
+      - forex
+      - crypto
+      - indices
+      - technical_indicators
+
+    markets:
+      - global
+
+    access:
+      type: rest_api
+      authentication: api_key
+      streaming: true
+      batch: true
+
+    formats:
+      - json
+      - csv
+
+    freshness:
+      historical: true
+      intraday: true
+      realtime: true
+
+    cost:
+      model: freemium
+
+    use_cases:
+      - primary_market_api_candidate
+      - streaming_quotes
+      - historical_prices
+      - multi_asset_support
+
+    priority: high
+
+  polygon:
+    name: Polygon
+    category: market_data
+    provider_type: commercial_api
+    enabled: false
+
+    capabilities:
+      - trades
+      - quotes
+      - aggregates
+      - historical_prices
+      - realtime_prices
+      - options
+      - forex
+      - crypto
+      - reference_data
+      - corporate_actions
+
+    markets:
+      - us
+
+    access:
+      type:
+        - rest_api
+        - websocket
+      authentication: api_key
+      streaming: true
+      batch: true
+
+    freshness:
+      historical: true
+      intraday: true
+      realtime: true
+
+    cost:
+      model: paid
+
+    use_cases:
+      - realtime_market_feed
+      - trade_events
+      - quote_events
+      - market_microstructure
+
+    priority: medium
+
+  finnhub:
+    name: Finnhub
+    category: market_data
+    provider_type: commercial_api
+    enabled: false
+
+    capabilities:
+      - realtime_quotes
+      - historical_prices
+      - company_profiles
+      - fundamentals
+      - earnings
+      - estimates
+      - news
+      - insider_transactions
+      - economic_data
+
+    markets:
+      - global
+
+    access:
+      type:
+        - rest_api
+        - websocket
+      authentication: api_key
+      streaming: true
+      batch: true
+
+    cost:
+      model: freemium
+
+    use_cases:
+      - company_intelligence
+      - market_streaming
+      - earnings
+      - news
+
+    priority: medium
+
+  financial_modeling_prep:
+    name: Financial Modeling Prep
+    category: market_data
+    provider_type: commercial_api
+    enabled: false
+
+    capabilities:
+      - historical_prices
+      - company_profiles
+      - financial_statements
+      - financial_ratios
+      - valuation_metrics
+      - earnings
+      - analyst_estimates
+      - dividends
+      - splits
+
+    markets:
+      - global
+
+    access:
+      type: rest_api
+      authentication: api_key
+      streaming: limited
+      batch: true
+
+    cost:
+      model: freemium
+
+    use_cases:
+      - fundamentals
+      - derived_financial_metrics
+      - company_reference_data
+
+    priority: medium
+
+  nasdaq_data_link:
+    name: Nasdaq Data Link
+    category: market_data
+    provider_type: data_marketplace
+    enabled: false
+
+    capabilities:
+      - historical_market_data
+      - alternative_data
+      - fundamentals
+      - economic_data
+      - institutional_data
+
+    access:
+      type: rest_api
+      authentication: api_key
+      streaming: false
+      batch: true
+
+    cost:
+      model: mixed
+
+    use_cases:
+      - alternative_datasets
+      - research
+      - historical_data
+
+    priority: low
+
+  yahoo_finance:
+    name: Yahoo Finance
+    category: market_data
+    provider_type: unofficial_api
+    enabled: true
+
+    capabilities:
+      - historical_prices
+      - quotes
+      - dividends
+      - splits
+      - basic_fundamentals
+      - company_metadata
+
+    markets:
+      - global
+
+    access:
+      type: unofficial_http
+      authentication: none
+      streaming: false
+      batch: true
+
+    cost:
+      model: free
+
+    use_cases:
+      - development
+      - experimentation
+      - fallback_data
+
+    restrictions:
+      production_recommended: false
+      redistribution_review_required: true
+
+    priority: low
+
+    notes: >
+      Useful for development and experimentation but should not become
+      a critical production dependency because it is not a stable,
+      contracted market-data API.
+
+  stooq:
+    name: Stooq
+    category: market_data
+    provider_type: public_data
+    enabled: false
+
+    capabilities:
+      - historical_prices
+      - indices
+      - equities
+      - forex
+
+    access:
+      type: file_download
+      authentication: none
+      streaming: false
+      batch: true
+
+    cost:
+      model: free
+
+    use_cases:
+      - historical_backfills
+      - research
+      - testing
+
+    priority: low
+
+  # ==========================================================================
+  # BRAZIL
+  # ==========================================================================
+
+  b3:
+    name: B3
+    organization: B3 S.A. - Brasil Bolsa Balcão
+    category: exchange_data
+    provider_type: exchange
+    enabled: true
+
+    capabilities:
+      - securities
+      - historical_prices
+      - trading_volume
+      - corporate_actions
+      - indices
+      - derivatives
+      - reference_data
+
+    markets:
+      - brazil
+
+    access:
+      type:
+        - files
+        - commercial_market_data
+      authentication: varies
+      streaming: commercial
+      batch: true
+
+    freshness:
+      historical: true
+      daily: true
+      realtime: commercial
+
+    cost:
+      model: mixed
+
+    use_cases:
+      - brazilian_security_master
+      - exchange_reference_data
+      - brazil_market_validation
+
+    restrictions:
+      automated_collection_review_required: true
+      redistribution_review_required: true
+      licensing_review_required: true
+
+    priority: critical
+
+    notes: >
+      B3 is the authoritative exchange source for Brazilian listed assets.
+      Public historical files have specific terms of use and should not
+      automatically be treated as unrestricted machine-readable data.
+
+  cvm:
+    name: Comissão de Valores Mobiliários
+    category: regulatory_filings
+    provider_type: government_open_data
+    enabled: true
+
+    capabilities:
+      - company_registry
+      - financial_statements
+      - regulatory_filings
+      - fund_data
+      - corporate_documents
+      - reference_data
+
+    markets:
+      - brazil
+
+    access:
+      type:
+        - csv
+        - file_download
+        - open_data_portal
+      authentication: none
+      streaming: false
+      batch: true
+
+    freshness:
+      company_registry: daily
+      filings: periodic
+
+    cost:
+      model: free
+
+    use_cases:
+      - brazil_company_master
+      - financial_statements
+      - filings
+      - issuer_resolution
+      - fundamentals
+
+    priority: critical
+
+  banco_central_brasil:
+    name: Banco Central do Brasil
+    aliases:
+      - BCB
+      - BACEN
+
+    category: macroeconomic_data
+    provider_type: government_api
+    enabled: true
+
+    capabilities:
+      - selic
+      - interest_rates
+      - inflation
+      - exchange_rates
+      - credit
+      - monetary_statistics
+      - financial_system_statistics
+
+    markets:
+      - brazil
+
+    access:
+      type:
+        - rest_api
+        - time_series_api
+      authentication: none
+      streaming: false
+      batch: true
+
+    use_cases:
+      - brazil_macro_context
+      - risk_free_rate
+      - fx_context
+      - monetary_policy_analysis
+
+    priority: critical
+
+  ibge:
+    name: Instituto Brasileiro de Geografia e Estatística
+    category: macroeconomic_data
+    provider_type: government_api
+    enabled: true
+
+    capabilities:
+      - inflation
+      - gdp
+      - employment
+      - demographics
+      - industrial_production
+      - retail_sales
+      - economic_statistics
+
+    markets:
+      - brazil
+
+    access:
+      type:
+        - rest_api
+        - files
+      authentication: none
+      streaming: false
+      batch: true
+
+    cost:
+      model: free
+
+    use_cases:
+      - brazil_macro_analysis
+      - economic_regime_detection
+      - sector_context
+
+    priority: high
+
+  tesouro_nacional:
+    name: Tesouro Nacional
+    category: fixed_income
+    provider_type: government_data
+    enabled: false
+
+    capabilities:
+      - sovereign_bonds
+      - treasury_rates
+      - public_debt
+      - fiscal_data
+
+    markets:
+      - brazil
+
+    access:
+      type:
+        - api
+        - files
+      streaming: false
+      batch: true
+
+    cost:
+      model: free
+
+    use_cases:
+      - sovereign_yield_curve
+      - fixed_income_context
+      - fiscal_analysis
+
+    priority: medium
+
+  # ==========================================================================
+  # UNITED STATES REGULATORY DATA
+  # ==========================================================================
+
+  sec_edgar:
+    name: SEC EDGAR
+    organization: U.S. Securities and Exchange Commission
+    category: regulatory_filings
+    provider_type: government_api
+    enabled: true
+
+    capabilities:
+      - company_filings
+      - company_metadata
+      - 10_k
+      - 10_q
+      - 8_k
+      - 20_f
+      - 6_k
+      - xbrl_facts
+      - financial_statements
+      - filing_documents
+
+    markets:
+      - united_states
+      - foreign_issuers_listed_in_us
+
+    access:
+      type:
+        - rest_api
+        - files
+        - rss
+      authentication: none
+      streaming: near_realtime
+      batch: true
+
+    formats:
+      - json
+      - html
+      - xml
+      - xbrl
+
+    freshness:
+      filings: realtime
+      bulk_files: daily
+
+    cost:
+      model: free
+
+    use_cases:
+      - canonical_us_filings
+      - fundamentals
+      - company_events
+      - earnings_analysis
+      - agent_document_retrieval
+
+    priority: critical
+
+  # ==========================================================================
+  # MACROECONOMIC DATA
+  # ==========================================================================
+
+  fred:
+    name: FRED
+    organization: Federal Reserve Bank of St. Louis
+    category: macroeconomic_data
+    provider_type: government_api
+    enabled: true
+
+    capabilities:
+      - interest_rates
+      - inflation
+      - gdp
+      - employment
+      - money_supply
+      - treasury_rates
+      - credit_spreads
+      - commodities
+      - economic_indicators
+
+    markets:
+      - united_states
+      - global
+
+    access:
+      type: rest_api
+      authentication: api_key
+      streaming: false
+      batch: true
+
+    cost:
+      model: free
+
+    use_cases:
+      - macro_context
+      - economic_regimes
+      - market_correlation
+      - risk_models
+
+    priority: critical
+
+  world_bank:
+    name: World Bank Open Data
+    category: macroeconomic_data
+    provider_type: international_organization_api
+    enabled: true
+
+    capabilities:
+      - gdp
+      - inflation
+      - population
+      - trade
+      - energy
+      - development_indicators
+      - country_statistics
+
+    markets:
+      - global
+
+    access:
+      type: rest_api
+      authentication: none
+      streaming: false
+      batch: true
+
+    cost:
+      model: free
+
+    use_cases:
+      - country_context
+      - cross_country_analysis
+      - macroeconomic_research
+
+    priority: high
+
+  imf:
+    name: International Monetary Fund
+    category: macroeconomic_data
+    provider_type: international_organization
+    enabled: true
+
+    capabilities:
+      - monetary_statistics
+      - balance_of_payments
+      - exchange_rates
+      - fiscal_data
+      - economic_forecasts
+      - country_indicators
+
+    markets:
+      - global
+
+    access:
+      type:
+        - api
+        - files
+      authentication: varies
+      streaming: false
+      batch: true
+
+    cost:
+      model: free
+
+    use_cases:
+      - international_macro
+      - country_risk
+      - cross_country_comparison
+
+    priority: medium
+
+  ecb:
+    name: European Central Bank
+    category: macroeconomic_data
+    provider_type: central_bank_api
+    enabled: false
+
+    capabilities:
+      - interest_rates
+      - monetary_policy
+      - exchange_rates
+      - inflation
+      - banking_statistics
+      - euro_area_statistics
+
+    markets:
+      - euro_area
+
+    access:
+      type: rest_api
+      authentication: none
+      streaming: false
+      batch: true
+
+    cost:
+      model: free
+
+    use_cases:
+      - european_macro_context
+      - monetary_policy_analysis
+      - fx_analysis
+
+    priority: medium
+
+  # ==========================================================================
+  # COMMODITIES / ENERGY
+  # ==========================================================================
+
+  eia:
+    name: U.S. Energy Information Administration
+    category: commodities
+    provider_type: government_api
+    enabled: true
+
+    capabilities:
+      - crude_oil
+      - natural_gas
+      - gasoline
+      - electricity
+      - energy_production
+      - inventories
+      - energy_consumption
+
+    markets:
+      - united_states
+      - global_energy
+
+    access:
+      type: rest_api
+      authentication: api_key
+      streaming: false
+      batch: true
+
+    cost:
+      model: free
+
+    use_cases:
+      - energy_sector_analysis
+      - oil_price_context
+      - commodity_company_analysis
+
+    priority: high
+
+  # ==========================================================================
+  # NEWS
+  # ==========================================================================
+
+  newsapi:
+    name: NewsAPI
+    category: news
+    provider_type: commercial_api
+    enabled: false
+
+    capabilities:
+      - news_articles
+      - keyword_search
+      - source_search
+
+    access:
+      type: rest_api
+      authentication: api_key
+      streaming: false
+      batch: true
+
+    cost:
+      model: freemium
+
+    use_cases:
+      - company_news
+      - market_event_context
+      - research_agent
+
+    priority: low
+
+  gdelt:
+    name: GDELT
+    category: news
+    provider_type: open_data
+    enabled: true
+
+    capabilities:
+      - global_news
+      - events
+      - entities
+      - themes
+      - geographic_events
+      - sentiment
+
+    markets:
+      - global
+
+    access:
+      type:
+        - api
+        - files
+        - bigquery
+      authentication: none
+      streaming: near_realtime
+      batch: true
+
+    cost:
+      model: free
+
+    use_cases:
+      - event_detection
+      - geopolitical_context
+      - news_clustering
+      - sentiment_research
+
+    priority: high
+
+  rss_feeds:
+    name: Publisher RSS Feeds
+    category: news
+    provider_type: distributed_public_feeds
+    enabled: true
+
+    capabilities:
+      - headlines
+      - articles
+      - company_updates
+      - regulatory_updates
+
+    access:
+      type: rss
+      authentication: none
+      streaming: polling
+      batch: true
+
+    use_cases:
+      - low_cost_news_ingestion
+      - company_monitoring
+      - event_detection
+
+    priority: medium
+
+  # ==========================================================================
+  # COMPANY / REFERENCE DATA
+  # ==========================================================================
+
+  openfigi:
+    name: OpenFIGI
+    category: reference_data
+    provider_type: identifier_api
+    enabled: true
+
+    capabilities:
+      - instrument_mapping
+      - figi
+      - ticker_mapping
+      - exchange_mapping
+      - security_identification
+
+    markets:
+      - global
+
+    access:
+      type: rest_api
+      authentication: optional_api_key
+      streaming: false
+      batch: true
+
+    use_cases:
+      - security_master
+      - identifier_resolution
+      - cross_provider_mapping
+
+    priority: high
+
+  gleif:
+    name: Global Legal Entity Identifier Foundation
+    aliases:
+      - GLEIF
+
+    category: reference_data
+    provider_type: open_reference_data
+    enabled: true
+
+    capabilities:
+      - legal_entities
+      - lei
+      - entity_relationships
+      - corporate_identity
+
+    markets:
+      - global
+
+    access:
+      type:
+        - rest_api
+        - files
+      authentication: none
+      streaming: false
+      batch: true
+
+    cost:
+      model: free
+
+    use_cases:
+      - legal_entity_resolution
+      - company_master
+      - entity_relationships
+
+    priority: high
+
+  # ==========================================================================
+  # CRYPTO
+  # ==========================================================================
+
+  coinbase:
+    name: Coinbase
+    category: crypto_market_data
+    provider_type: exchange_api
+    enabled: false
+
+    capabilities:
+      - trades
+      - quotes
+      - candles
+      - order_book
+      - realtime_prices
+
+    markets:
+      - crypto
+
+    access:
+      type:
+        - rest_api
+        - websocket
+      authentication: optional
+      streaming: true
+      batch: true
+
+    use_cases:
+      - crypto_market_stream
+      - multi_asset_architecture_testing
+
+    priority: low
+
+  binance:
+    name: Binance
+    category: crypto_market_data
+    provider_type: exchange_api
+    enabled: false
+
+    capabilities:
+      - trades
+      - quotes
+      - candles
+      - order_book
+      - realtime_prices
+
+    markets:
+      - crypto
+
+    access:
+      type:
+        - rest_api
+        - websocket
+      streaming: true
+      batch: true
+
+    use_cases:
+      - high_volume_streaming_tests
+      - event_processing
+      - multi_asset_support
+
+    priority: low
+
+  # ==========================================================================
+  # DERIVED / INTERNAL SOURCES
+  # ==========================================================================
+
+  market_events:
+    name: Market Event Engine
+    category: internal_derived
+    provider_type: internal
+    enabled: true
+
+    upstream:
+      - market_data
+      - corporate_actions
+      - fundamentals
+
+    produces:
+      - price_spike
+      - price_drop
+      - volume_spike
+      - volatility_spike
+      - new_52_week_high
+      - new_52_week_low
+      - unusual_market_activity
+
+    access:
+      type: internal_stream
+
+    streaming: true
+
+    target_layer: silver
+
+    priority: critical
+
+  financial_metrics:
+    name: Financial Metrics Engine
+    category: internal_derived
+    provider_type: internal
+    enabled: true
+
+    upstream:
+      - prices
+      - financial_statements
+      - corporate_actions
+
+    produces:
+      - returns
+      - volatility
+      - drawdown
+      - market_cap
+      - pe_ratio
+      - pb_ratio
+      - ps_ratio
+      - roe
+      - roa
+      - dividend_yield
+      - earnings_growth
+      - revenue_growth
+
+    access:
+      type: internal_batch
+
+    target_layer: gold
+
+    priority: critical
+
+  semantic_layer:
+    name: Financial Semantic Layer
+    category: internal_semantic
+    provider_type: internal
+    enabled: true
+
+    upstream:
+      - silver
+      - gold
+
+    exposes:
+      entities:
+        - company
+        - security
+        - exchange
+        - sector
+        - industry
+        - filing
+        - earnings
+        - dividend
+        - macro_indicator
+        - news_event
+
+      metrics:
+        - return_1d
+        - return_7d
+        - return_30d
+        - return_ytd
+        - volatility_30d
+        - drawdown
+        - market_cap
+        - pe_ratio
+        - dividend_yield
+        - revenue_growth
+        - earnings_growth
+
+    consumers:
+      - api
+      - dashboards
+      - ai_agents
+      - research_engine
+
+    priority: critical
+
+
+# =============================================================================
+# SOURCE GROUPS
+# =============================================================================
+
+source_groups:
+
+  us_equities:
+    sources:
+      - sec_edgar
+      - twelve_data
+      - alpha_vantage
+      - fred
+      - openfigi
+      - gleif
+
+  brazil_equities:
+    sources:
+      - b3
+      - cvm
+      - banco_central_brasil
+      - ibge
+      - openfigi
+      - gleif
+
+  macro:
+    sources:
+      - fred
+      - banco_central_brasil
+      - ibge
+      - world_bank
+      - imf
+      - ecb
+
+  energy:
+    sources:
+      - eia
+      - alpha_vantage
+
+  news:
+    sources:
+      - gdelt
+      - rss_feeds
+      - newsapi
+
+  identifiers:
+    sources:
+      - openfigi
+      - gleif
+
+  streaming_candidates:
+    sources:
+      - twelve_data
+      - polygon
+      - finnhub
+      - coinbase
+      - binance
+
+
+# =============================================================================
+# SOURCE AUTHORITY
+# =============================================================================
+
+authority:
+
+  company_filings:
+    brazil:
+      primary: cvm
+
+    united_states:
+      primary: sec_edgar
+
+  brazil_exchange_reference:
+    primary: b3
+
+  brazil_macro:
+    primary:
+      - banco_central_brasil
+      - ibge
+
+  us_macro:
+    primary: fred
+
+  company_identifiers:
+    primary:
+      - openfigi
+      - gleif
+
+  energy:
+    primary: eia
+
+
+# =============================================================================
+# INGESTION TIERS
+# =============================================================================
+
+ingestion_tiers:
+
+  tier_0:
+    description: Required to make the first usable version of the platform.
+
+    sources:
+      - sec_edgar
+      - cvm
+      - twelve_data
+      - banco_central_brasil
+      - fred
+
+  tier_1:
+    description: Adds company identity, macro context and event intelligence.
+
+    sources:
+      - openfigi
+      - gleif
+      - ibge
+      - gdelt
+      - eia
+
+  tier_2:
+    description: Alternative providers and broader market coverage.
+
+    sources:
+      - alpha_vantage
+      - financial_modeling_prep
+      - finnhub
+      - polygon
+      - world_bank
+      - imf
+      - ecb
+
+  tier_3:
+    description: Optional datasets and additional asset classes.
+
+    sources:
+      - nasdaq_data_link
+      - newsapi
+      - coinbase
+      - binance
+      - stooq
+
+
+# =============================================================================
+# INGESTION MODES
+# =============================================================================
+
+ingestion_modes:
+
+  batch:
+    - sec_edgar
+    - cvm
+    - b3
+    - banco_central_brasil
+    - ibge
+    - fred
+    - world_bank
+    - imf
+    - ecb
+    - eia
+    - openfigi
+    - gleif
+
+  micro_batch:
+    - alpha_vantage
+    - financial_modeling_prep
+    - gdelt
+    - rss_feeds
+
+  streaming:
+    - twelve_data
+    - polygon
+    - finnhub
+    - coinbase
+    - binance
+
+
+# =============================================================================
+# DATA DOMAINS
+# =============================================================================
+
+domains:
+
+  market:
+    datasets:
+      - securities
+      - exchanges
+      - quotes
+      - trades
+      - candles
+      - indices
+      - order_books
+
+  company:
+    datasets:
+      - companies
+      - legal_entities
+      - securities
+      - company_profiles
+      - sectors
+      - industries
+
+  fundamentals:
+    datasets:
+      - income_statements
+      - balance_sheets
+      - cash_flow_statements
+      - financial_ratios
+      - earnings
+
+  corporate_actions:
+    datasets:
+      - dividends
+      - splits
+      - mergers
+      - acquisitions
+      - spin_offs
+
+  filings:
+    datasets:
+      - regulatory_filings
+      - annual_reports
+      - quarterly_reports
+      - material_events
+
+  macro:
+    datasets:
+      - interest_rates
+      - inflation
+      - gdp
+      - employment
+      - exchange_rates
+      - commodities
+
+  intelligence:
+    datasets:
+      - news
+      - sentiment
+      - market_events
+      - anomalies
+      - research_reports
+```
